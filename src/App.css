@@ -1,0 +1,905 @@
+
+/* ===== KARAKTER ANAK SMP ===== */
+.student-scene {
+  position: relative;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.student-pair {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 35px;
+  position: relative;
+  z-index: 2;
+  padding-top: 35px;
+}
+
+.student {
+  position: relative;
+  width: 115px;
+  height: 245px;
+  animation: studentFloat 2.5s ease-in-out infinite;
+}
+
+.student.boy {
+  animation-delay: 0.5s;
+}
+
+.student-head {
+  position: absolute;
+  z-index: 4;
+  top: 22px;
+  left: 27px;
+  width: 65px;
+  height: 72px;
+  border-radius: 45% 45% 48% 48%;
+  background: #f2c49f;
+  border: 2px solid #8a5742;
+}
+
+.student-hair {
+  position: absolute;
+  z-index: 5;
+  top: 12px;
+  left: 24px;
+  width: 70px;
+  height: 34px;
+  background: #30221f;
+  border-radius: 50% 50% 25% 25%;
+}
+
+.girl .student-hair {
+  height: 43px;
+  border-radius: 48% 48% 35% 35%;
+}
+
+.girl .student-hair::after {
+  content: "";
+  position: absolute;
+  top: 26px;
+  left: 4px;
+  width: 14px;
+  height: 67px;
+  background: #30221f;
+  border-radius: 12px;
+  box-shadow: 49px 0 #30221f;
+}
+
+.student-eye {
+  position: absolute;
+  top: 29px;
+  width: 6px;
+  height: 7px;
+  border-radius: 50%;
+  background: #30221f;
+}
+
+.left-eye { left: 17px; }
+.right-eye { right: 17px; }
+
+.student-smile {
+  position: absolute;
+  left: 25px;
+  top: 47px;
+  width: 14px;
+  height: 7px;
+  border-bottom: 2px solid #a64d55;
+  border-radius: 50%;
+}
+
+.student-neck {
+  position: absolute;
+  z-index: 3;
+  top: 85px;
+  left: 49px;
+  width: 23px;
+  height: 20px;
+  background: #f2c49f;
+}
+
+.student-body {
+  position: absolute;
+  z-index: 3;
+  top: 98px;
+  left: 17px;
+  width: 86px;
+  height: 80px;
+  background: #fff;
+  border: 3px solid #315b91;
+  border-radius: 15px 15px 8px 8px;
+}
+
+.student-body::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -3px;
+  width: 80px;
+  height: 13px;
+  background: #315b91;
+  border-radius: 12px 12px 0 0;
+}
+
+.student-tie {
+  position: absolute;
+  top: 10px;
+  left: 34px;
+  width: 13px;
+  height: 42px;
+  background: #315b91;
+  clip-path: polygon(20% 0, 80% 0, 100% 18%, 65% 100%, 35% 100%, 0 18%);
+}
+
+.student-pocket {
+  position: absolute;
+  right: 9px;
+  top: 25px;
+  width: 13px;
+  height: 15px;
+  border: 2px solid #315b91;
+}
+
+.student-arm {
+  position: absolute;
+  z-index: 2;
+  top: 108px;
+  width: 17px;
+  height: 63px;
+  background: #fff;
+  border: 3px solid #315b91;
+  border-radius: 15px;
+  transform-origin: top center;
+}
+
+.arm-left {
+  left: 9px;
+  transform: rotate(18deg);
+}
+
+.arm-right {
+  right: 5px;
+  transform: rotate(-18deg);
+}
+
+.student.girl .arm-right {
+  animation: studentWave 1.5s ease-in-out infinite;
+}
+
+.student.boy .arm-left {
+  animation: studentWave 1.5s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.student-leg {
+  position: absolute;
+  z-index: 2;
+  top: 175px;
+  width: 25px;
+  height: 49px;
+  background: #315b91;
+  border-radius: 5px;
+}
+
+.leg-left { left: 31px; }
+.leg-right { right: 29px; }
+
+.girl .student-leg {
+  background: #315b91;
+  width: 27px;
+}
+
+.girl .student-leg::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -5px;
+  width: 37px;
+  height: 10px;
+  background: #315b91;
+}
+
+.student-shoe {
+  position: absolute;
+  z-index: 3;
+  top: 217px;
+  width: 34px;
+  height: 15px;
+  background: #fff;
+  border: 2px solid #555;
+  border-radius: 12px 12px 5px 5px;
+}
+
+.shoe-left { left: 22px; }
+.shoe-right { right: 20px; }
+
+@keyframes studentFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes studentWave {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(-65deg); }
+}
+
+.floating-math {
+  position: absolute;
+  color: #800020;
+  font-size: 35px;
+  font-weight: bold;
+  animation: numberFloat 3s ease-in-out infinite;
+}
+
+.math-one { top: 35px; left: 12%; }
+.math-two { top: 80px; right: 12%; animation-delay: .5s; }
+.math-three { bottom: 70px; left: 18%; animation-delay: 1s; }
+.math-four { bottom: 90px; right: 18%; animation-delay: 1.5s; }
+
+@keyframes numberFloat {
+  0%, 100% { transform: translateY(0) rotate(-10deg); }
+  50% { transform: translateY(-15px) rotate(10deg); }
+}
+
+.speech-bubble {
+  position: absolute;
+  top: 5px;
+  right: 5%;
+  z-index: 5;
+  padding: 10px 15px;
+  background: #fff;
+  border: 2px solid #d45060;
+  border-radius: 18px;
+  color: #800020;
+  font-weight: bold;
+  animation: studentFloat 2s infinite;
+}
+
+.scene-ground {
+  position: absolute;
+  bottom: 5px;
+  width: 85%;
+  height: 15px;
+  border-radius: 50%;
+  background: #f3e6d5;
+}
+
+/* ===== KONTEN DAN KARTU ===== */
+.content-card,
+.welcome-card {
+  background: #fff;
+  border: 1px solid #f3e6d5;
+  border-radius: 20px;
+  padding: 28px;
+  margin: 25px 0;
+  box-shadow: 0 5px 18px rgba(128, 0, 32, 0.07);
+}
+
+.content-card h2,
+.welcome-card h2 {
+  color: #800020;
+  margin-bottom: 12px;
+}
+
+.section-desc {
+  color: #725c5c;
+  margin-bottom: 22px;
+}
+
+.feature-grid,
+.evaluation-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin: 25px 0;
+}
+
+.feature-card,
+.evaluation-item {
+  background: #f3e6d5;
+  border-radius: 17px;
+  padding: 20px;
+  text-align: center;
+}
+
+.feature-card span,
+.evaluation-item span {
+  font-size: 32px;
+}
+
+.feature-card h3 {
+  color: #800020;
+  margin: 10px 0;
+}
+
+.feature-card p {
+  color: #725c5c;
+}
+
+/* ===== SOAL DAN JAWABAN ===== */
+.question-card {
+  background: #fff9f2;
+  border: 1px solid #f3e6d5;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 18px 0;
+}
+
+.question-card h3 {
+  color: #800020;
+  margin-bottom: 15px;
+}
+
+.answer-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e5d6c8;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.answer-option.selected {
+  background: #f3e6d5;
+  border: 2px solid #d45060;
+}
+
+.answer-option input {
+  accent-color: #800020;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.answer-explanation {
+  margin-top: 15px;
+  padding: 13px;
+  border-radius: 10px;
+}
+
+.answer-explanation p {
+  margin-top: 5px;
+}
+
+.answer-explanation.correct {
+  background: #e6f4e8;
+  color: #246b35;
+}
+
+.answer-explanation.incorrect {
+  background: #fff0e8;
+  color: #8b3d25;
+}
+
+.score-result {
+  margin-top: 25px;
+  padding: 22px;
+  text-align: center;
+  background: #f3e6d5;
+  border-radius: 16px;
+}
+
+.score-result h3 {
+  color: #800020;
+}
+
+.score-number {
+  font-size: 48px;
+  font-weight: bold;
+  color: #d45060;
+  margin: 10px;
+}
+
+/* ===== MATERI ===== */
+.material-box {
+  padding: 20px;
+  margin: 15px 0;
+  background: #fff9f2;
+  border-left: 5px solid #d45060;
+  border-radius: 12px;
+}
+
+.material-box h3 {
+  color: #800020;
+  margin-bottom: 10px;
+}
+
+.number-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.number-types span {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #f3e6d5;
+  color: #800020;
+  font-weight: bold;
+}
+
+.example-math {
+  margin: 10px 0;
+  padding: 10px;
+  background: #f3e6d5;
+  border-radius: 8px;
+  color: #800020;
+  font-weight: bold;
+}
+
+/* ===== KALKULATOR ===== */
+.calculator {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.calculator input,
+.calculator select {
+  min-width: 90px;
+  padding: 13px;
+  border: 1px solid #d9b9ad;
+  border-radius: 10px;
+  background: #fff9f2;
+  color: #800020;
+  font-size: 17px;
+}
+
+.calculator-result {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 12px;
+  background: #f3e6d5;
+  color: #800020;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* ===== GARIS BILANGAN ===== */
+.number-line {
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  align-items: center;
+  margin: 65px 5px 35px;
+  min-width: 500px;
+}
+
+.line-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: #800020;
+}
+
+.line-point {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  font-weight: bold;
+}
+
+.line-tick {
+  width: 3px;
+  height: 17px;
+  background: #800020;
+}
+
+.negative-number { color: #d45060; }
+.positive-number { color: #315b91; }
+.zero-number { color: #800020; }
+
+.line-note {
+  margin-top: 25px;
+  color: #725c5c;
+}
+
+/* ===== EVALUASI ===== */
+.evaluation-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.evaluation-item strong {
+  display: block;
+  margin-top: 10px;
+  color: #800020;
+  font-size: 22px;
+}
+
+.evaluation-feedback {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 14px;
+  background: #fff9f2;
+  border-left: 5px solid #d45060;
+}
+
+.evaluation-feedback h3 {
+  color: #800020;
+  margin-bottom: 10px;
+}
+
+.evaluation-feedback li {
+  margin: 8px 0 8px 20px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 800px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .evaluation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .answer-options {
+    grid-template-columns: 1fr;
+  }
+
+  .student-pair {
+    gap: 5px;
+    transform: scale(.85);
+  }
+
+  .speech-bubble {
+    right: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .content-card,
+  .welcome-card {
+    padding: 17px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calculator {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .number-line {
+    min-width: 500px;
+  }
+}
+
+.girl .student-body::after {
+  content: "";
+  position: absolute;
+  z-index: 4;
+  top: 69px;
+  left: -3px;
+  width: 86px;
+  height: 35px;
+  background: #315b91;
+  clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+}
+/* ===== ILUSTRASI SISWA DI BERANDA ===== */
+
+.student-scene {
+  position: relative;
+  min-height: 380px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.student-image-wrapper {
+  width: 300px;
+  max-width: 85%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: siswaBergerak 3s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+.student-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes siswaBergerak {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.speech-bubble {
+  position: absolute;
+  top: 15px;
+  right: 5%;
+  z-index: 3;
+  padding: 10px 15px;
+  background: #fff;
+  border: 2px solid #D45060;
+  border-radius: 18px;
+  color: #800020;
+  font-weight: bold;
+  animation: gelembungBergerak 2s ease-in-out infinite;
+}
+
+@keyframes gelembungBergerak {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@media (max-width: 600px) {
+  .student-scene {
+    min-height: 320px;
+  }
+
+  .student-image-wrapper {
+    width: 240px;
+  }
+}
+
+/* ===== DESAIN BERANDA MATHFUN ===== */
+
+.hero-banner {
+  position: relative;
+  overflow: hidden;
+  min-height: 440px;
+  padding: 45px 5% 65px;
+  background: #FFF9F2;
+}
+
+.hero-inner {
+  max-width: 1250px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  align-items: center;
+  gap: 25px;
+  position: relative;
+  z-index: 2;
+}
+
+.hero-copy {
+  padding: 20px 0;
+}
+
+.hero-label {
+  display: inline-block;
+  padding: 12px 20px;
+  background: #F3E6D5;
+  color: #800020;
+  border-radius: 30px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.hero-copy h2 {
+  font-size: clamp(36px, 4.5vw, 62px);
+  line-height: 1.12;
+  color: #800020;
+  margin: 0 0 20px;
+  font-weight: 800;
+}
+
+.hero-copy h2 span {
+  color: #D45060;
+}
+
+.hero-copy p {
+  max-width: 480px;
+  color: #542c32;
+  font-size: 18px;
+  line-height: 1.7;
+  margin-bottom: 25px;
+}
+
+.hero-button {
+  background: #D45060;
+  color: white;
+  border: none;
+  border-radius: 35px;
+  padding: 15px 28px;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.hero-button:hover {
+  background: #800020;
+  transform: translateY(-3px);
+}
+
+.hero-button span {
+  margin-left: 12px;
+}
+
+.hero-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  animation: heroFloat 3s ease-in-out infinite;
+}
+
+.hero-illustration img {
+  width: 100%;
+  max-width: 650px;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes heroFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-9px);
+  }
+}
+
+.hero-bottom-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 45px;
+  background: #800020;
+  clip-path: polygon(
+    0 55%, 12% 25%, 25% 75%,
+    40% 30%, 55% 70%, 70% 25%,
+    85% 65%, 100% 15%, 100% 100%, 0 100%
+  );
+}
+
+/* Kartu menu beranda */
+
+.home-features {
+  max-width: 1150px;
+  margin: 35px auto;
+  padding: 0 25px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+.home-feature-card {
+  background: white;
+  border: 2px solid #F3E6D5;
+  border-radius: 20px;
+  padding: 25px 20px;
+  text-align: center;
+  box-shadow: 0 5px 15px rgba(128, 0, 32, .07);
+  transition: .3s;
+}
+
+.home-feature-card:hover {
+  transform: translateY(-6px);
+  border-color: #D45060;
+}
+
+.home-feature-card span {
+  font-size: 42px;
+}
+
+.home-feature-card h3 {
+  color: #800020;
+  margin: 12px 0;
+}
+
+.home-feature-card p {
+  color: #725c5c;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.home-feature-card button {
+  background: #D45060;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 10px 22px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.home-feature-card button:hover {
+  background: #800020;
+}
+
+/* Navbar agar lebih rapi */
+
+.main-header {
+  padding: 15px 4%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+  background: #FFF9F2;
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.nav-links button {
+  border: none;
+  border-radius: 25px;
+  padding: 11px 15px;
+  background: #F3E6D5;
+  color: #800020;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.nav-links button.nav-active {
+  background: #D45060;
+  color: white;
+}
+
+/* Tampilan HP */
+
+@media (max-width: 800px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .hero-copy p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .hero-illustration img {
+    max-width: 500px;
+  }
+
+  .home-features {
+    grid-template-columns: 1fr;
+  }
+
+  .main-header {
+    justify-content: center;
+  }
+
+  .nav-links {
+    justify-content: center;
+  }
+}

@@ -1,0 +1,15 @@
+PETUNJUK PEMASANGAN DESAIN BELAJARBULAT
+
+1. Ekstrak folder/ZIP ini.
+2. Buka folder project React/Vite kamu di VS Code.
+3. Masuk ke folder src.
+4. Ganti tiga file berikut dengan file dari folder src di ZIP:
+   - App.jsx
+   - App.css
+   - index.css
+5. Simpan semua file (Ctrl + S).
+6. Jika server Vite masih berjalan, buka/refresh Chrome. Jika belum berjalan,
+   buka Terminal di folder project dan jalankan: npm.cmd run dev
+7. Buka alamat Local yang muncul di Terminal (contoh http://localhost:5175/).
+
+Catatan: Jangan mengganti package.json, main.jsx, atau file konfigurasi lainnya.
