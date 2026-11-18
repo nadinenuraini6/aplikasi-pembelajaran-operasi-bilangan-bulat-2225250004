@@ -102,7 +102,222 @@ function Kuis({ judul, daftarSoal, onSelesai }) {
   );
 }
 
-/* CHATBOT AYO TANYAKAN TANPA API KEY */
+/* =====================================================
+   FUNGSI BANTU CHATBOT MATEMATIKA
+   ===================================================== */
+
+// Mengubah variasi simbol matematika menjadi bentuk standar.
+function normalisasiSoal(teks) {
+  return teks
+    .toLowerCase()
+    .replace(/[−–]/g, "-")
+    .replace(/[＋]/g, "+")
+    .replace(/[×✕]/g, "*")
+    .replace(/[÷]/g, "/")
+    .replace(/[xX]/g, "*")
+    .replace(/,/g, ".")
+    .replace(/\bdibagi dengan\b/g, "/")
+    .replace(/\bdibagi\b/g, "/")
+    .replace(/\bdikalikan dengan\b/g, "*")
+    .replace(/\bdikalikan\b/g, "*")
+    .replace(/\bkali\b/g, "*")
+    .replace(/\bditambah dengan\b/g, "+")
+    .replace(/\bditambah\b/g, "+")
+    .replace(/\bditambahin\b/g, "+")
+    .replace(/\bditambah\b/g, "+")
+    .replace(/\bdikurangi dengan\b/g, "-")
+    .replace(/\bdikurangi\b/g, "-")
+    .replace(/\bkurangi\b/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Parser matematika sederhana. Mendukung kurung dan prioritas operasi.
+function hitungEkspresi(teks) {
+  const tokens = teks.match(/\d+(?:\.\d+)?|[()+\-*/]/g);
+
+  if (!tokens || tokens.join("") !== teks.replace(/\s/g, "")) {
+    return null;
+  }
+
+  let posisi = 0;
+
+  function ekspresi() {
+    let nilai = perkalian();
+
+    while (tokens[posisi] === "+" || tokens[posisi] === "-") {
+      const operator = tokens[posisi++];
+      const kanan = perkalian();
+
+      nilai = operator === "+" ? nilai + kanan : nilai - kanan;
+    }
+
+    return nilai;
+  }
+
+  function perkalian() {
+    let nilai = faktor();
+
+    while (tokens[posisi] === "*" || tokens[posisi] === "/") {
+      const operator = tokens[posisi++];
+      const kanan = faktor();
+
+      if (operator === "/" && kanan === 0) {
+        throw new Error("nol");
+      }
+
+      nilai = operator === "*" ? nilai * kanan : nilai / kanan;
+    }
+
+    return nilai;
+  }
+
+  function faktor() {
+    const token = tokens[posisi];
+
+    if (token === "+") {
+      posisi++;
+      return faktor();
+    }
+
+    if (token === "-") {
+      posisi++;
+      return -faktor();
+    }
+
+    if (token === "(") {
+      posisi++;
+      const nilai = ekspresi();
+
+      if (tokens[posisi] !== ")") {
+        throw new Error("kurung");
+      }
+
+      posisi++;
+      return nilai;
+    }
+
+    if (token !== undefined && /^\d/.test(token)) {
+      posisi++;
+      return Number(token);
+    }
+
+    throw new Error("format");
+  }
+
+  try {
+    const hasil = ekspresi();
+
+    if (posisi !== tokens.length || !Number.isFinite(hasil)) {
+      return null;
+    }
+
+    return hasil;
+  } catch (error) {
+    if (error.message === "nol") {
+      return "PEMBAGIAN_NOL";
+    }
+    return null;
+  }
+}
+
+// Mencari bagian soal hitungan di dalam kalimat siswa.
+function ambilEkspresi(teks) {
+  const normal = normalisasiSoal(teks);
+
+  const pola = /[+-]?\d+(?:\.\d+)?(?:\s*[+\-*/]\s*[+-]?\d+(?:\.\d+)?|\s*[+\-*/]\s*\(?\s*[+-]?\d+(?:\.\d+)?\s*\)?|\s*\([^)]*\))+/g;
+  const cocok = normal.match(pola);
+
+  if (!cocok) return null;
+
+  const kandidat = cocok
+    .map((item) => item.trim())
+    .filter((item) => /[+\-*/]/.test(item));
+
+  if (!kandidat.length) return null;
+
+  // Memilih ekspresi terpanjang agar soal operasi campuran ikut terbaca.
+  kandidat.sort((a, b) => b.length - a.length);
+
+  for (const item of kandidat) {
+    const hasil = hitungEkspresi(item.replace(/\s+/g, ""));
+    if (hasil !== null) {
+      return {
+        ekspresi: item.replace(/\s+/g, ""),
+        hasil
+      };
+    }
+
+    if (hasil === "PEMBAGIAN_NOL") {
+      return {
+        ekspresi: item.replace(/\s+/g, ""),
+        hasil
+      };
+    }
+  }
+
+  return null;
+}
+
+function formatAngka(angka) {
+  if (Number.isInteger(angka)) return String(angka);
+  return String(Number(angka.toFixed(6)));
+}
+
+function jawabanHitungan(data) {
+  const { ekspresi, hasil } = data;
+
+  if (hasil === "PEMBAGIAN_NOL") {
+    return `Soal: ${ekspresi}\n\nBilangan tidak dapat dibagi dengan nol. Pembagian dengan nol tidak memiliki hasil.\n\nCoba periksa kembali bilangan pembaginya, ya!`;
+  }
+
+  const hasilTeks = formatAngka(hasil);
+  const adaKurung = ekspresi.includes("(");
+  const operasi = ekspresi.includes("*") || ekspresi.includes("/")
+    ? "perkalian atau pembagian"
+    : "penjumlahan atau pengurangan";
+
+  if (/^[+-]?\d+(?:\.\d+)?[+\-*/][+-]?\d+(?:\.\d+)?$/.test(ekspresi)) {
+    const bagian = ekspresi.match(/^([+-]?\d+(?:\.\d+)?)([+\-*/])([+-]?\d+(?:\.\d+)?)$/);
+
+    if (bagian) {
+      const a = Number(bagian[1]);
+      const op = bagian[2];
+      const b = Number(bagian[3]);
+      let penjelasan = "";
+
+      if (op === "+") {
+        if (a < 0 && b < 0) {
+          penjelasan = "Kedua bilangan bertanda negatif. Jumlahkan nilai angkanya, lalu gunakan tanda negatif.";
+        } else if (a >= 0 && b >= 0) {
+          penjelasan = "Kedua bilangan positif. Jumlahkan seperti biasa.";
+        } else {
+          penjelasan = "Tanda kedua bilangan berbeda. Kurangkan nilai mutlaknya, lalu gunakan tanda bilangan yang nilai mutlaknya lebih besar.";
+        }
+      } else if (op === "-") {
+        penjelasan = `Pengurangan dapat diubah menjadi penjumlahan dengan lawan bilangan:\n${formatAngka(a)} - (${formatAngka(b)}) = ${formatAngka(a)} + (${formatAngka(-b)}).`;
+      } else if (op === "*") {
+        penjelasan = `Kalikan nilai angkanya terlebih dahulu: ${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(a * b)}. ${
+          (a < 0) !== (b < 0)
+            ? "Karena tandanya berbeda, hasilnya negatif."
+            : "Karena tandanya sama, hasilnya positif."
+        }`;
+      } else if (op === "/") {
+        penjelasan = `Bagi nilai angkanya terlebih dahulu: ${Math.abs(a)} ÷ ${Math.abs(b)} = ${Math.abs(a / b)}. ${
+          (a < 0) !== (b < 0)
+            ? "Karena tandanya berbeda, hasilnya negatif."
+            : "Karena tandanya sama, hasilnya positif."
+        }`;
+      }
+
+      return `Yuk, kita bahas langkah demi langkah! 😊\n\nSoal: ${ekspresi.replace(/\*/g, " × ").replace(/\//g, " ÷ ")}\n\nLangkah 1: Perhatikan operasi dan tanda bilangannya.\n${penjelasan}\n\nLangkah 2: Hitung hasilnya.\n${formatAngka(a)} ${op === "*" ? "×" : op === "/" ? "÷" : op} (${formatAngka(b)}) = ${hasilTeks}\n\nJadi, hasil akhirnya adalah ${hasilTeks}.`;
+    }
+  }
+
+  return `Aku menemukan soal hitunganmu! 😊\n\nSoal: ${ekspresi.replace(/\*/g, " × ").replace(/\//g, " ÷ ")}\n\nLangkah 1: Kerjakan operasi yang ada di dalam tanda kurung terlebih dahulu.\nLangkah 2: Kerjakan perkalian atau pembagian sebelum penjumlahan atau pengurangan.\nLangkah 3: Hitung operasi yang tersisa dari kiri ke kanan.\n\nKarena soal ini memuat ${operasi}${adaKurung ? " dan tanda kurung" : ""}, perhatikan urutan pengerjaannya.\n\nHasil akhirnya adalah ${hasilTeks}.`;
+}
+
+/* CHATBOT AYO TANYAKAN */
 function ChatbotMathFun() {
   const [pesan, setPesan] = useState("");
   const [memuat, setMemuat] = useState(false);
@@ -111,172 +326,130 @@ function ChatbotMathFun() {
     {
       role: "assistant",
       content:
-        "Halo! Aku Teman MathFun. 😊\n\nSilakan tanyakan materi atau soal tentang operasi bilangan bulat. Aku akan membantu menjelaskan langkah demi langkah."
+        "Halo! Aku Teman MathFun. 😊\n\nAku siap membantumu belajar operasi bilangan bulat kelas 7. Kamu bisa bertanya dengan bahasamu sendiri, meminta contoh soal, atau langsung menuliskan soal hitungan.\n\nYuk, belajar bersama!"
     }
   ]);
 
   const pertanyaanContoh = [
-    "Apa itu bilangan bulat?",
-    "Mengapa negatif dikali negatif hasilnya positif?",
-    "Bagaimana cara menghitung 5 + (-3)?",
-    "Bagaimana cara mengurangi bilangan negatif?",
-    "Apa fungsi garis bilangan?"
+    "Apa yang dimaksud bilangan bulat?",
+    "Kenapa negatif dikali negatif hasilnya positif?",
+    "Tolong jelaskan 8 + (-5)",
+    "Bagaimana cara menghitung 12 - (-4)?",
+    "Hitung -6 + 3 × 4"
   ];
 
   function jawabPertanyaan(pertanyaan) {
     const q = pertanyaan.toLowerCase().trim();
+    const normal = normalisasiSoal(q);
 
-    // Membaca soal hitungan yang diketik siswa
-    const pola = q.match(
-      /(-?\d+)\s*([+×x*÷/:])\s*\(?\s*(-?\d+)\s*\)?/
-    );
+    // Menangani soal hitungan terlebih dahulu.
+    const dataHitungan = ambilEkspresi(q);
 
-    if (pola) {
-      const a = Number(pola[1]);
-      const tanda = pola[2];
-      const b = Number(pola[3]);
-
-      if (tanda === "+") {
-        const hasil = a + b;
-        let penjelasan;
-
-        if (a < 0 && b < 0) {
-          penjelasan = "Kedua bilangan negatif. Jumlahkan nilai angkanya dan gunakan tanda negatif.";
-        } else if (a >= 0 && b >= 0) {
-          penjelasan = "Kedua bilangan positif. Jumlahkan seperti biasa.";
-        } else {
-          penjelasan = "Tandanya berbeda. Kurangkan nilai mutlak yang lebih besar dengan yang lebih kecil, lalu gunakan tanda bilangan dengan nilai mutlak lebih besar.";
-        }
-
-        return `Yuk, kita hitung bersama! 😊\n\nSoal: ${a} + (${b})\n\nLangkah 1: Perhatikan tanda kedua bilangan.\nLangkah 2: ${penjelasan}\n\nPerhitungan:\n${a} + (${b}) = ${hasil}\n\nJadi, jawabannya adalah ${hasil}.`;
-      }
-
-      if (tanda === "-") {
-        const hasil = a - b;
-        return `Kita gunakan aturan pengurangan bilangan bulat.\n\nSoal: ${a} - (${b})\n\nPengurangan diubah menjadi penjumlahan dengan lawan bilangan:\n\n${a} - (${b}) = ${a} + (${-b})\n\nHasilnya:\n${a} + (${-b}) = ${hasil}\n\nJadi, jawabannya adalah ${hasil}.`;
-      }
-
-      if (["×", "x", "*"].includes(tanda)) {
-        const hasil = a * b;
-        let aturan;
-
-        if (a < 0 && b < 0) {
-          aturan = "Negatif dikali negatif menghasilkan positif.";
-        } else if (a < 0 || b < 0) {
-          aturan = "Tanda berbeda menghasilkan negatif.";
-        } else {
-          aturan = "Positif dikali positif menghasilkan positif.";
-        }
-
-        return `Yuk, kita hitung! 😊\n\nSoal: ${a} × (${b})\n\nLangkah 1: Kalikan nilai angkanya.\n${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(hasil)}\n\nLangkah 2: Perhatikan tanda.\n${aturan}\n\n${a} × (${b}) = ${hasil}\n\nJadi, jawabannya adalah ${hasil}.`;
-      }
-
-      if (["÷", "/", ":"].includes(tanda)) {
-        if (b === 0) {
-          return "Bilangan tidak dapat dibagi dengan nol. Coba gunakan bilangan pembagi yang lain, ya!";
-        }
-
-        const hasil = a / b;
-        let aturan;
-
-        if (a < 0 && b < 0) {
-          aturan = "Negatif dibagi negatif menghasilkan positif.";
-        } else if (a < 0 || b < 0) {
-          aturan = "Tanda berbeda menghasilkan negatif.";
-        } else {
-          aturan = "Positif dibagi positif menghasilkan positif.";
-        }
-
-        return `Soal: ${a} ÷ (${b})\n\nLangkah 1: Bagi nilai angkanya.\n${Math.abs(a)} ÷ ${Math.abs(b)} = ${Math.abs(hasil)}\n\nLangkah 2: Perhatikan aturan tanda.\n${aturan}\n\nHasilnya adalah ${hasil}.`;
-      }
+    if (dataHitungan) {
+      return jawabanHitungan(dataHitungan);
     }
 
+    // Salam.
     if (
-      q.includes("apa itu bilangan bulat") ||
-      q.includes("pengertian bilangan bulat")
+      /\b(halo|hai|hello|assalamualaikum|selamat pagi|selamat siang|selamat sore|selamat malam)\b/.test(q)
     ) {
-      return "Bilangan bulat adalah kumpulan bilangan yang terdiri dari bilangan negatif, nol, dan bilangan positif.\n\nContohnya:\n• Negatif: -3, -2, -1.\n• Nol: 0.\n• Positif: 1, 2, 3.\n\nContoh dalam kehidupan sehari-hari adalah suhu di bawah nol, suhu nol derajat, dan suhu di atas nol.";
+      return "Halo juga! 👋😊\n\nSelamat datang di Teman MathFun. Aku siap membantu kamu memahami bilangan bulat.\n\nKamu bisa bertanya tentang penjumlahan, pengurangan, perkalian, pembagian, aturan tanda, atau garis bilangan.";
     }
 
+    if (/terima kasih|makasih|thanks|thank you/.test(q)) {
+      return "Sama-sama! 😊\n\nSenang bisa membantu proses belajarmu. Tetap semangat belajar matematika, ya! Kalau ada soal bilangan bulat lain, kamu boleh bertanya lagi.";
+    }
+
+    if (/siapa kamu|nama kamu|kamu siapa/.test(q)) {
+      return "Aku Teman MathFun 🤖, teman belajar yang ada di aplikasi MathFun.\n\nAku dibuat untuk membantu siswa memahami materi operasi bilangan bulat, mulai dari konsep dasar sampai latihan soal.";
+    }
+
+    // Pengertian bilangan bulat.
     if (
-      q.includes("positif dan negatif") ||
-      q.includes("perbedaan bilangan") ||
-      q.includes("bilangan negatif") ||
-      q.includes("bilangan positif")
+      /apa itu bilangan bulat|pengertian bilangan bulat|maksud bilangan bulat|definisi bilangan bulat|bilangan bulat adalah/.test(q)
     ) {
-      return "Bilangan positif memiliki nilai lebih besar dari nol, contohnya 1, 2, dan 3.\n\nBilangan negatif memiliki nilai lebih kecil dari nol, contohnya -1, -2, dan -3.\n\nBilangan negatif terletak di sebelah kiri nol pada garis bilangan, sedangkan bilangan positif berada di sebelah kanan nol.";
+      return "Bilangan bulat adalah kumpulan bilangan yang terdiri dari bilangan bulat negatif, nol, dan bilangan bulat positif.\n\nContohnya:\n• Bilangan negatif: -3, -2, -1.\n• Nol: 0.\n• Bilangan positif: 1, 2, 3.\n\nContoh dalam kehidupan sehari-hari:\n• Suhu -2°C menunjukkan suhu di bawah nol.\n• Lantai 3 menunjukkan posisi tiga tingkat di atas lantai dasar.\n• Utang Rp5.000 dapat diwakili dengan bilangan -5.000.\n\nJadi, bilangan bulat tidak memiliki bagian pecahan atau desimal.";
     }
 
-    if (
-      q.includes("penjumlahan") ||
-      q.includes("menjumlahkan") ||
-      q.includes("ditambah")
-    ) {
-      return "Aturan penjumlahan bilangan bulat:\n\n1. Tanda sama: jumlahkan angkanya dan gunakan tanda yang sama.\nContoh: (-4) + (-3) = -7.\n\n2. Tanda berbeda: kurangkan nilai mutlaknya dan gunakan tanda bilangan dengan nilai mutlak lebih besar.\nContoh: 8 + (-3) = 5.\n\nIngat untuk selalu memperhatikan tanda bilangan!";
+    // Contoh penerapan.
+    if (/contoh.*kehidupan|penerapan|dalam kehidupan sehari|manfaat bilangan bulat/.test(q)) {
+      return "Bilangan bulat sering digunakan dalam kehidupan sehari-hari. Contohnya:\n\n1. Suhu: -5°C menunjukkan suhu lima derajat di bawah nol.\n2. Uang: memiliki uang Rp10.000 dapat dianggap positif, sedangkan utang Rp5.000 dapat dianggap negatif.\n3. Lantai gedung: lantai 2 berada di atas lantai dasar, sedangkan basement 1 dapat ditulis -1.\n4. Permainan: mendapatkan 10 poin dapat ditulis +10, sedangkan kehilangan 5 poin dapat ditulis -5.\n\nDengan bilangan bulat, kita dapat menyatakan keadaan yang nilainya di atas maupun di bawah nol.";
     }
 
-    if (
-      q.includes("pengurangan") ||
-      q.includes("mengurangi") ||
-      q.includes("dikurangi")
-    ) {
-      return "Pengurangan bilangan bulat dapat diubah menjadi penjumlahan dengan lawan bilangan.\n\nContoh 1:\n5 - (-2) = 5 + 2 = 7.\n\nContoh 2:\n5 - 2 = 5 + (-2) = 3.\n\nJadi, jika mengurangi bilangan negatif, kita mengubahnya menjadi penjumlahan bilangan positif.";
+    // Positif, negatif, nol, dan perbandingan.
+    if (/bilangan positif|bilangan negatif|perbedaan.*positif.*negatif|positif.*negatif.*apa bedanya/.test(q)) {
+      return "Perbedaannya terletak pada posisi dan nilainya terhadap nol.\n\n• Bilangan positif: nilainya lebih besar dari nol, contohnya 1, 2, 3, dan seterusnya.\n• Bilangan negatif: nilainya lebih kecil dari nol, contohnya -1, -2, -3, dan seterusnya.\n• Nol: bukan bilangan positif maupun negatif.\n\nPada garis bilangan, bilangan negatif berada di sebelah kiri nol, sedangkan bilangan positif berada di sebelah kanan nol.";
     }
 
-    if (
-      q.includes("perkalian") ||
-      q.includes("dikalikan") ||
-      q.includes("mengalikan") ||
-      q.includes("negatif dikali negatif")
-    ) {
-      return "Aturan tanda perkalian bilangan bulat:\n\n• Positif × Positif = Positif.\n• Negatif × Negatif = Positif.\n• Positif × Negatif = Negatif.\n• Negatif × Positif = Negatif.\n\nContoh:\n(-4) × (-3) = 12.\n\nDua bilangan dengan tanda yang sama menghasilkan positif, sedangkan tanda berbeda menghasilkan negatif.";
+    if (/nol.*positif|nol.*negatif|0.*positif|0.*negatif/.test(q)) {
+      return "Nol (0) bukan bilangan positif dan bukan bilangan negatif.\n\nNol merupakan bilangan yang menjadi batas antara bilangan negatif dan bilangan positif pada garis bilangan.";
     }
 
-    if (
-      q.includes("pembagian") ||
-      q.includes("dibagi") ||
-      q.includes("membagi")
-    ) {
-      return "Aturan tanda pembagian sama seperti perkalian:\n\n• Positif ÷ Positif = Positif.\n• Negatif ÷ Negatif = Positif.\n• Positif ÷ Negatif = Negatif.\n• Negatif ÷ Positif = Negatif.\n\nContoh:\n(-20) ÷ (-5) = 4.\n\nIngat, tanda sama menghasilkan positif dan tanda berbeda menghasilkan negatif.";
+    if (/lebih besar|lebih kecil|membandingkan|urutan bilangan|urutkan bilangan/.test(q)) {
+      return "Untuk membandingkan bilangan bulat, kamu bisa menggunakan garis bilangan.\n\nIngat aturan berikut:\n• Bilangan yang posisinya lebih ke kanan nilainya lebih besar.\n• Bilangan yang posisinya lebih ke kiri nilainya lebih kecil.\n\nContoh:\n-2 lebih besar daripada -5, karena -2 berada lebih ke kanan daripada -5.\n\nUrutan dari terkecil ke terbesar: -5, -2, 0, 2, 5.";
     }
 
-    if (
-      q.includes("garis bilangan") ||
-      q.includes("arah") ||
-      q.includes("kiri") ||
-      q.includes("kanan")
-    ) {
-      return "Garis bilangan membantu kita memahami posisi bilangan bulat.\n\n• Bilangan negatif berada di sebelah kiri nol.\n• Bilangan positif berada di sebelah kanan nol.\n• Semakin ke kanan, nilai bilangan semakin besar.\n• Semakin ke kiri, nilai bilangan semakin kecil.\n\nContoh: 2 + (-3).\nMulai dari angka 2, kemudian bergerak 3 langkah ke kiri. Hasilnya adalah -1.";
+    // Penjumlahan.
+    if (/penjumlahan|menjumlahkan|cara.*menjumlah|ditambah|penambahan|jumlah.*negatif/.test(q)) {
+      return "Penjumlahan bilangan bulat memiliki dua aturan utama.\n\n1. Jika kedua bilangan memiliki tanda yang sama, jumlahkan nilai angkanya dan gunakan tanda yang sama.\nContoh:\n(-4) + (-3) = -7.\n\n2. Jika tandanya berbeda, kurangkan nilai mutlak yang lebih besar dengan yang lebih kecil. Gunakan tanda dari bilangan yang nilai mutlaknya lebih besar.\nContoh:\n8 + (-3) = 8 - 3 = 5.\n\nContoh lainnya:\n-9 + 4 = -5, karena 9 - 4 = 5 dan nilai mutlak 9 lebih besar.\n\nKunci penjumlahan adalah memperhatikan tanda dan nilai setiap bilangan.";
     }
 
-    if (
-      q.includes("aturan tanda") ||
-      q.includes("tanda sama") ||
-      q.includes("tanda berbeda")
-    ) {
-      return "Aturan tanda perkalian dan pembagian:\n\n• Positif dengan positif = positif.\n• Negatif dengan negatif = positif.\n• Positif dengan negatif = negatif.\n• Negatif dengan positif = negatif.\n\nIngat: tanda sama menghasilkan positif, sedangkan tanda berbeda menghasilkan negatif.\n\nCatatan: Aturan penjumlahan dan pengurangan berbeda.";
+    // Pengurangan.
+    if (/pengurangan|mengurangi|cara.*mengurang|dikurangi|pengurangan.*negatif/.test(q)) {
+      return "Cara mudah mengerjakan pengurangan bilangan bulat adalah mengubahnya menjadi penjumlahan dengan lawan bilangan.\n\nAturannya:\nMengurangi suatu bilangan sama dengan menambahkan lawan bilangan tersebut.\n\nContoh 1:\n7 - 3 = 7 + (-3) = 4.\n\nContoh 2:\n7 - (-3) = 7 + 3 = 10.\n\nContoh 3:\n-5 - 2 = -5 + (-2) = -7.\n\nIngat: jika mengurangi bilangan negatif, operasi berubah menjadi penjumlahan bilangan positif.";
     }
 
-    if (
-      q.includes("contoh soal") ||
-      q.includes("latihan soal")
-    ) {
-      return "Yuk, coba kerjakan soal berikut! 😊\n\n1. 7 + (-4) = ...\n2. -8 + (-5) = ...\n3. 9 - 12 = ...\n4. (-6) × (-3) = ...\n5. 24 ÷ (-4) = ...\n\nKirim jawabanmu satu per satu. Aku akan membantu memeriksa hasilnya.";
+    // Perkalian dan alasan tanda.
+    if (/mengapa|kenapa|mengapa.*negatif|kenapa.*negatif/.test(q) && /kali|perkalian|dikali/.test(q)) {
+      return "Pertanyaan bagus! 😊\n\nMengapa negatif dikali negatif hasilnya positif?\n\nKita bisa memahaminya melalui pola berikut:\n\n3 × (-2) = -6\n2 × (-2) = -4\n1 × (-2) = -2\n0 × (-2) = 0\n-1 × (-2) = 2\n-2 × (-2) = 4\n\nPerhatikan hasilnya: setiap bilangan pertama berkurang 1, hasil perkaliannya bertambah 2. Karena pola tersebut harus tetap teratur, (-1) × (-2) = 2 dan (-2) × (-2) = 4.\n\nJadi, negatif dikali negatif menghasilkan positif.";
     }
 
-    if (q.includes("terima kasih") || q.includes("makasih")) {
-      return "Sama-sama! 😊 Tetap semangat belajar matematika. Kalau masih ada materi bilangan bulat yang belum dipahami, silakan bertanya lagi!";
+    if (/perkalian|mengalikan|dikalikan|perkalian bilangan/.test(q)) {
+      return "Aturan perkalian bilangan bulat:\n\n• Positif × positif = positif.\n• Positif × negatif = negatif.\n• Negatif × positif = negatif.\n• Negatif × negatif = positif.\n\nContoh:\n1. 4 × 3 = 12.\n2. 4 × (-3) = -12.\n3. (-4) × 3 = -12.\n4. (-4) × (-3) = 12.\n\nTips: tanda sama menghasilkan positif, sedangkan tanda berbeda menghasilkan negatif. Setelah menentukan tandanya, kalikan nilai angkanya.";
     }
 
-    if (
-      q.includes("halo") ||
-      q.includes("hai") ||
-      q.includes("assalamualaikum")
-    ) {
-      return "Halo! 👋 Selamat datang di Teman MathFun.\n\nAku siap menemanimu belajar penjumlahan, pengurangan, perkalian, pembagian, dan garis bilangan. Silakan bertanya!";
+    // Pembagian.
+    if (/pembagian|membagi|dibagi|membagikan/.test(q)) {
+      return "Aturan pembagian bilangan bulat sama seperti aturan tanda pada perkalian.\n\n• Positif ÷ positif = positif.\n• Positif ÷ negatif = negatif.\n• Negatif ÷ positif = negatif.\n• Negatif ÷ negatif = positif.\n\nContoh:\n1. 20 ÷ 5 = 4.\n2. 20 ÷ (-5) = -4.\n3. (-20) ÷ 5 = -4.\n4. (-20) ÷ (-5) = 4.\n\nIngat: tanda sama menghasilkan positif, sedangkan tanda berbeda menghasilkan negatif.\n\nCatatan: bilangan tidak dapat dibagi dengan nol.";
     }
 
-    return "Terima kasih sudah bertanya! 😊\n\nAku adalah Teman MathFun yang membantu belajar operasi bilangan bulat.\n\nCoba tanyakan hal yang lebih spesifik, misalnya:\n\n• Bagaimana cara menghitung penjumlahan bilangan negatif?\n• Mengapa negatif dikali negatif menjadi positif?\n• Bagaimana cara mengerjakan pengurangan bilangan bulat?\n• Apa fungsi garis bilangan?\n\nKamu juga bisa menuliskan soal hitungan seperti 5 + (-3).";
+    // Aturan tanda.
+    if (/aturan tanda|tanda positif|tanda negatif|tanda sama|tanda berbeda|aturan perkalian/.test(q)) {
+      return "Aturan tanda pada perkalian dan pembagian:\n\n| Tanda bilangan | Hasil |\n|---|---|\n| Positif dengan positif | Positif |\n| Positif dengan negatif | Negatif |\n| Negatif dengan positif | Negatif |\n| Negatif dengan negatif | Positif |\n\nCara mengingatnya:\n• Tanda sama menghasilkan positif.\n• Tanda berbeda menghasilkan negatif.\n\nPerlu diingat, aturan penjumlahan dan pengurangan tidak sama dengan aturan perkalian dan pembagian.";
+    }
+
+    // Garis bilangan.
+    if (/garis bilangan|fungsi garis|kegunaan garis|arah kiri|arah kanan|bergerak ke kiri|bergerak ke kanan/.test(q)) {
+      return "Garis bilangan adalah garis yang menunjukkan letak atau posisi bilangan secara berurutan.\n\nHal yang perlu diingat:\n• Bilangan negatif berada di sebelah kiri nol.\n• Nol berada di tengah.\n• Bilangan positif berada di sebelah kanan nol.\n• Semakin ke kanan, nilai bilangan semakin besar.\n• Semakin ke kiri, nilai bilangan semakin kecil.\n\nContoh 2 + (-3):\n1. Mulai dari angka 2.\n2. Karena ditambah -3, bergerak 3 langkah ke kiri.\n3. Kamu akan sampai di angka -1.\n\nJadi, 2 + (-3) = -1.";
+    }
+
+    // Nilai mutlak.
+    if (/nilai mutlak|mutlak/.test(q)) {
+      return "Nilai mutlak adalah jarak suatu bilangan dari angka nol pada garis bilangan. Nilai mutlak selalu bernilai positif atau nol.\n\nContoh:\n• |5| = 5.\n• |-5| = 5.\n• |0| = 0.\n\nMengapa |-5| = 5? Karena jarak angka -5 ke nol adalah 5 satuan.";
+    }
+
+    // Operasi campuran.
+    if (/operasi campuran|urutan operasi|dikerjakan dulu|mana dulu|prioritas operasi/.test(q)) {
+      return "Untuk mengerjakan operasi hitung campuran, perhatikan urutannya:\n\n1. Kerjakan operasi di dalam tanda kurung terlebih dahulu.\n2. Kerjakan perkalian dan pembagian dari kiri ke kanan.\n3. Kerjakan penjumlahan dan pengurangan dari kiri ke kanan.\n\nContoh:\n2 + 3 × 4\n\nLangkah 1: Kerjakan perkalian terlebih dahulu.\n3 × 4 = 12.\n\nLangkah 2: Kerjakan penjumlahan.\n2 + 12 = 14.\n\nJadi, hasilnya adalah 14, bukan 20.";
+    }
+
+    // Kesalahan umum.
+    if (/salah|keliru|sering salah|kesalahan|bingung.*tanda/.test(q)) {
+      return "Tidak apa-apa kalau masih sering keliru. 😊 Berikut beberapa hal yang perlu diperhatikan:\n\n1. Jangan mengabaikan tanda negatif di depan bilangan.\n2. Bedakan aturan penjumlahan dengan aturan perkalian.\n3. Pada pengurangan, ubah menjadi penjumlahan dengan lawan bilangan.\n4. Pada operasi campuran, kerjakan perkalian dan pembagian sebelum penjumlahan dan pengurangan.\n5. Periksa kembali hasil hitunganmu.\n\nKalau ada contoh soal yang membuatmu bingung, kirimkan soalnya agar kita bahas bersama.";
+    }
+
+    // Meminta contoh soal.
+    if (/contoh soal|latihan soal|kasih soal|beri soal|soal latihan/.test(q)) {
+      return "Tentu! Yuk, coba kerjakan lima soal berikut. 😊\n\n1. 7 + (-4) = ...\n2. -8 + (-5) = ...\n3. 9 - 12 = ...\n4. (-6) × (-3) = ...\n5. 24 ÷ (-4) = ...\n\nKamu bisa mengirim jawaban satu per satu. Aku akan membantu memeriksa dan menjelaskan cara menghitungnya.";
+    }
+
+    // Meminta penjelasan ulang.
+    if (/tidak paham|belum paham|belum mengerti|jelaskan lagi|ulang|lebih sederhana|lebih mudah/.test(q)) {
+      return "Tidak apa-apa, kita pelajari secara perlahan, ya! 😊\n\nBilangan bulat terdiri dari bilangan negatif, nol, dan positif.\n\nContoh sederhana:\n• 5 + 2 = 7, karena dua bilangan positif dijumlahkan.\n• 5 + (-2) = 3, karena tandanya berbeda sehingga 5 dikurangi 2.\n• (-5) + (-2) = -7, karena keduanya negatif sehingga hasilnya negatif.\n\nKamu bisa kirim satu soal yang belum dipahami. Nanti aku jelaskan langkah demi langkah.";
+    }
+
+    // Pertanyaan di luar topik.
+    return "Terima kasih sudah bertanya! 😊\n\nAku Teman MathFun, dan materi utamaku adalah operasi bilangan bulat kelas 7 SMP.\n\nAku bisa membantu membahas:\n• Pengertian dan contoh bilangan bulat.\n• Penjumlahan dan pengurangan.\n• Perkalian dan pembagian.\n• Aturan tanda positif dan negatif.\n• Garis bilangan dan nilai mutlak.\n• Operasi hitung campuran.\n\nKamu juga bisa langsung menuliskan soal hitungan, misalnya:\n- 8 + (-5)\n- 12 - (-4)\n- (-6) × 3\n- -6 + 3 × 4\n\nCoba tanyakan kembali dengan topik bilangan bulat, ya!";
   }
 
   function kirimPesan(e) {
@@ -286,10 +459,12 @@ function ChatbotMathFun() {
     if (!pertanyaan || memuat) return;
 
     setMemuat(true);
+
     setRiwayat((sebelumnya) => [
       ...sebelumnya,
       { role: "user", content: pertanyaan }
     ]);
+
     setPesan("");
 
     setTimeout(() => {
@@ -301,7 +476,7 @@ function ChatbotMathFun() {
       ]);
 
       setMemuat(false);
-    }, 400);
+    }, 350);
   }
 
   return (
@@ -319,7 +494,8 @@ function ChatbotMathFun() {
       <div className="chatbot-guidance">
         <strong>🌟 Yuk, belajar bersama!</strong>
         <p>
-          Tanyakan materi atau soal bilangan bulat. Teman MathFun akan membantu menjelaskan langkah-langkah penyelesaiannya.
+          Tanyakan materi atau soal bilangan bulat dengan bahasamu sendiri.
+          Teman MathFun akan membantu menjelaskan langkah-langkah penyelesaiannya.
         </p>
       </div>
 
@@ -373,7 +549,9 @@ function ChatbotMathFun() {
       </form>
 
       <p className="chatbot-note">
-        Teman MathFun memberikan jawaban berdasarkan materi operasi bilangan bulat yang tersedia di dalam aplikasi.
+        Teman MathFun membantu menjawab berdasarkan materi operasi bilangan
+        bulat yang tersedia di dalam aplikasi. Periksa kembali langkah
+        perhitungan jika kamu menemukan jawaban yang kurang tepat.
       </p>
     </section>
   );
