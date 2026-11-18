@@ -49,7 +49,6 @@ function Kuis({ judul, daftarSoal, onSelesai }) {
       {daftarSoal.map((soal, i) => (
         <div className="question-card" key={i}>
           <h3>{i + 1}. {soal.q}</h3>
-
           <div className="answer-options">
             {soal.a.map((pilihan, j) => (
               <label
@@ -103,12 +102,286 @@ function Kuis({ judul, daftarSoal, onSelesai }) {
   );
 }
 
+/* CHATBOT AYO TANYAKAN TANPA API KEY */
+function ChatbotMathFun() {
+  const [pesan, setPesan] = useState("");
+  const [memuat, setMemuat] = useState(false);
+
+  const [riwayat, setRiwayat] = useState([
+    {
+      role: "assistant",
+      content:
+        "Halo! Aku Teman MathFun. 😊\n\nSilakan tanyakan materi atau soal tentang operasi bilangan bulat. Aku akan membantu menjelaskan langkah demi langkah."
+    }
+  ]);
+
+  const pertanyaanContoh = [
+    "Apa itu bilangan bulat?",
+    "Mengapa negatif dikali negatif hasilnya positif?",
+    "Bagaimana cara menghitung 5 + (-3)?",
+    "Bagaimana cara mengurangi bilangan negatif?",
+    "Apa fungsi garis bilangan?"
+  ];
+
+  function jawabPertanyaan(pertanyaan) {
+    const q = pertanyaan.toLowerCase().trim();
+
+    // Membaca soal hitungan yang diketik siswa
+    const pola = q.match(
+      /(-?\d+)\s*([+×x*÷/:])\s*\(?\s*(-?\d+)\s*\)?/
+    );
+
+    if (pola) {
+      const a = Number(pola[1]);
+      const tanda = pola[2];
+      const b = Number(pola[3]);
+
+      if (tanda === "+") {
+        const hasil = a + b;
+        let penjelasan;
+
+        if (a < 0 && b < 0) {
+          penjelasan = "Kedua bilangan negatif. Jumlahkan nilai angkanya dan gunakan tanda negatif.";
+        } else if (a >= 0 && b >= 0) {
+          penjelasan = "Kedua bilangan positif. Jumlahkan seperti biasa.";
+        } else {
+          penjelasan = "Tandanya berbeda. Kurangkan nilai mutlak yang lebih besar dengan yang lebih kecil, lalu gunakan tanda bilangan dengan nilai mutlak lebih besar.";
+        }
+
+        return `Yuk, kita hitung bersama! 😊\n\nSoal: ${a} + (${b})\n\nLangkah 1: Perhatikan tanda kedua bilangan.\nLangkah 2: ${penjelasan}\n\nPerhitungan:\n${a} + (${b}) = ${hasil}\n\nJadi, jawabannya adalah ${hasil}.`;
+      }
+
+      if (tanda === "-") {
+        const hasil = a - b;
+        return `Kita gunakan aturan pengurangan bilangan bulat.\n\nSoal: ${a} - (${b})\n\nPengurangan diubah menjadi penjumlahan dengan lawan bilangan:\n\n${a} - (${b}) = ${a} + (${-b})\n\nHasilnya:\n${a} + (${-b}) = ${hasil}\n\nJadi, jawabannya adalah ${hasil}.`;
+      }
+
+      if (["×", "x", "*"].includes(tanda)) {
+        const hasil = a * b;
+        let aturan;
+
+        if (a < 0 && b < 0) {
+          aturan = "Negatif dikali negatif menghasilkan positif.";
+        } else if (a < 0 || b < 0) {
+          aturan = "Tanda berbeda menghasilkan negatif.";
+        } else {
+          aturan = "Positif dikali positif menghasilkan positif.";
+        }
+
+        return `Yuk, kita hitung! 😊\n\nSoal: ${a} × (${b})\n\nLangkah 1: Kalikan nilai angkanya.\n${Math.abs(a)} × ${Math.abs(b)} = ${Math.abs(hasil)}\n\nLangkah 2: Perhatikan tanda.\n${aturan}\n\n${a} × (${b}) = ${hasil}\n\nJadi, jawabannya adalah ${hasil}.`;
+      }
+
+      if (["÷", "/", ":"].includes(tanda)) {
+        if (b === 0) {
+          return "Bilangan tidak dapat dibagi dengan nol. Coba gunakan bilangan pembagi yang lain, ya!";
+        }
+
+        const hasil = a / b;
+        let aturan;
+
+        if (a < 0 && b < 0) {
+          aturan = "Negatif dibagi negatif menghasilkan positif.";
+        } else if (a < 0 || b < 0) {
+          aturan = "Tanda berbeda menghasilkan negatif.";
+        } else {
+          aturan = "Positif dibagi positif menghasilkan positif.";
+        }
+
+        return `Soal: ${a} ÷ (${b})\n\nLangkah 1: Bagi nilai angkanya.\n${Math.abs(a)} ÷ ${Math.abs(b)} = ${Math.abs(hasil)}\n\nLangkah 2: Perhatikan aturan tanda.\n${aturan}\n\nHasilnya adalah ${hasil}.`;
+      }
+    }
+
+    if (
+      q.includes("apa itu bilangan bulat") ||
+      q.includes("pengertian bilangan bulat")
+    ) {
+      return "Bilangan bulat adalah kumpulan bilangan yang terdiri dari bilangan negatif, nol, dan bilangan positif.\n\nContohnya:\n• Negatif: -3, -2, -1.\n• Nol: 0.\n• Positif: 1, 2, 3.\n\nContoh dalam kehidupan sehari-hari adalah suhu di bawah nol, suhu nol derajat, dan suhu di atas nol.";
+    }
+
+    if (
+      q.includes("positif dan negatif") ||
+      q.includes("perbedaan bilangan") ||
+      q.includes("bilangan negatif") ||
+      q.includes("bilangan positif")
+    ) {
+      return "Bilangan positif memiliki nilai lebih besar dari nol, contohnya 1, 2, dan 3.\n\nBilangan negatif memiliki nilai lebih kecil dari nol, contohnya -1, -2, dan -3.\n\nBilangan negatif terletak di sebelah kiri nol pada garis bilangan, sedangkan bilangan positif berada di sebelah kanan nol.";
+    }
+
+    if (
+      q.includes("penjumlahan") ||
+      q.includes("menjumlahkan") ||
+      q.includes("ditambah")
+    ) {
+      return "Aturan penjumlahan bilangan bulat:\n\n1. Tanda sama: jumlahkan angkanya dan gunakan tanda yang sama.\nContoh: (-4) + (-3) = -7.\n\n2. Tanda berbeda: kurangkan nilai mutlaknya dan gunakan tanda bilangan dengan nilai mutlak lebih besar.\nContoh: 8 + (-3) = 5.\n\nIngat untuk selalu memperhatikan tanda bilangan!";
+    }
+
+    if (
+      q.includes("pengurangan") ||
+      q.includes("mengurangi") ||
+      q.includes("dikurangi")
+    ) {
+      return "Pengurangan bilangan bulat dapat diubah menjadi penjumlahan dengan lawan bilangan.\n\nContoh 1:\n5 - (-2) = 5 + 2 = 7.\n\nContoh 2:\n5 - 2 = 5 + (-2) = 3.\n\nJadi, jika mengurangi bilangan negatif, kita mengubahnya menjadi penjumlahan bilangan positif.";
+    }
+
+    if (
+      q.includes("perkalian") ||
+      q.includes("dikalikan") ||
+      q.includes("mengalikan") ||
+      q.includes("negatif dikali negatif")
+    ) {
+      return "Aturan tanda perkalian bilangan bulat:\n\n• Positif × Positif = Positif.\n• Negatif × Negatif = Positif.\n• Positif × Negatif = Negatif.\n• Negatif × Positif = Negatif.\n\nContoh:\n(-4) × (-3) = 12.\n\nDua bilangan dengan tanda yang sama menghasilkan positif, sedangkan tanda berbeda menghasilkan negatif.";
+    }
+
+    if (
+      q.includes("pembagian") ||
+      q.includes("dibagi") ||
+      q.includes("membagi")
+    ) {
+      return "Aturan tanda pembagian sama seperti perkalian:\n\n• Positif ÷ Positif = Positif.\n• Negatif ÷ Negatif = Positif.\n• Positif ÷ Negatif = Negatif.\n• Negatif ÷ Positif = Negatif.\n\nContoh:\n(-20) ÷ (-5) = 4.\n\nIngat, tanda sama menghasilkan positif dan tanda berbeda menghasilkan negatif.";
+    }
+
+    if (
+      q.includes("garis bilangan") ||
+      q.includes("arah") ||
+      q.includes("kiri") ||
+      q.includes("kanan")
+    ) {
+      return "Garis bilangan membantu kita memahami posisi bilangan bulat.\n\n• Bilangan negatif berada di sebelah kiri nol.\n• Bilangan positif berada di sebelah kanan nol.\n• Semakin ke kanan, nilai bilangan semakin besar.\n• Semakin ke kiri, nilai bilangan semakin kecil.\n\nContoh: 2 + (-3).\nMulai dari angka 2, kemudian bergerak 3 langkah ke kiri. Hasilnya adalah -1.";
+    }
+
+    if (
+      q.includes("aturan tanda") ||
+      q.includes("tanda sama") ||
+      q.includes("tanda berbeda")
+    ) {
+      return "Aturan tanda perkalian dan pembagian:\n\n• Positif dengan positif = positif.\n• Negatif dengan negatif = positif.\n• Positif dengan negatif = negatif.\n• Negatif dengan positif = negatif.\n\nIngat: tanda sama menghasilkan positif, sedangkan tanda berbeda menghasilkan negatif.\n\nCatatan: Aturan penjumlahan dan pengurangan berbeda.";
+    }
+
+    if (
+      q.includes("contoh soal") ||
+      q.includes("latihan soal")
+    ) {
+      return "Yuk, coba kerjakan soal berikut! 😊\n\n1. 7 + (-4) = ...\n2. -8 + (-5) = ...\n3. 9 - 12 = ...\n4. (-6) × (-3) = ...\n5. 24 ÷ (-4) = ...\n\nKirim jawabanmu satu per satu. Aku akan membantu memeriksa hasilnya.";
+    }
+
+    if (q.includes("terima kasih") || q.includes("makasih")) {
+      return "Sama-sama! 😊 Tetap semangat belajar matematika. Kalau masih ada materi bilangan bulat yang belum dipahami, silakan bertanya lagi!";
+    }
+
+    if (
+      q.includes("halo") ||
+      q.includes("hai") ||
+      q.includes("assalamualaikum")
+    ) {
+      return "Halo! 👋 Selamat datang di Teman MathFun.\n\nAku siap menemanimu belajar penjumlahan, pengurangan, perkalian, pembagian, dan garis bilangan. Silakan bertanya!";
+    }
+
+    return "Terima kasih sudah bertanya! 😊\n\nAku adalah Teman MathFun yang membantu belajar operasi bilangan bulat.\n\nCoba tanyakan hal yang lebih spesifik, misalnya:\n\n• Bagaimana cara menghitung penjumlahan bilangan negatif?\n• Mengapa negatif dikali negatif menjadi positif?\n• Bagaimana cara mengerjakan pengurangan bilangan bulat?\n• Apa fungsi garis bilangan?\n\nKamu juga bisa menuliskan soal hitungan seperti 5 + (-3).";
+  }
+
+  function kirimPesan(e) {
+    e.preventDefault();
+    const pertanyaan = pesan.trim();
+
+    if (!pertanyaan || memuat) return;
+
+    setMemuat(true);
+    setRiwayat((sebelumnya) => [
+      ...sebelumnya,
+      { role: "user", content: pertanyaan }
+    ]);
+    setPesan("");
+
+    setTimeout(() => {
+      const jawaban = jawabPertanyaan(pertanyaan);
+
+      setRiwayat((sebelumnya) => [
+        ...sebelumnya,
+        { role: "assistant", content: jawaban }
+      ]);
+
+      setMemuat(false);
+    }, 400);
+  }
+
+  return (
+    <section className="content-card chatbot-page">
+      <div className="chatbot-heading">
+        <div className="chatbot-avatar">🤖</div>
+        <div>
+          <h2>💬 Ayo Tanyakan!</h2>
+          <p className="section-desc">
+            Teman belajar operasi bilangan bulat. Tanyakan materi yang belum kamu pahami.
+          </p>
+        </div>
+      </div>
+
+      <div className="chatbot-guidance">
+        <strong>🌟 Yuk, belajar bersama!</strong>
+        <p>
+          Tanyakan materi atau soal bilangan bulat. Teman MathFun akan membantu menjelaskan langkah-langkah penyelesaiannya.
+        </p>
+      </div>
+
+      <div className="chatbot-suggestions">
+        <strong>💡 Contoh pertanyaan:</strong>
+        <div className="suggestion-list">
+          {pertanyaanContoh.map((item, index) => (
+            <button
+              type="button"
+              key={index}
+              onClick={() => setPesan(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="chatbot-messages" aria-live="polite">
+        {riwayat.map((item, index) => (
+          <div
+            className={`chat-message ${item.role === "user" ? "user-message" : "bot-message"}`}
+            key={index}
+          >
+            <div className="chat-message-name">
+              {item.role === "user" ? "Kamu" : "Teman MathFun 🤖"}
+            </div>
+            <p style={{ whiteSpace: "pre-line" }}>{item.content}</p>
+          </div>
+        ))}
+
+        {memuat && (
+          <div className="chat-message bot-message">
+            <div className="chat-message-name">Teman MathFun</div>
+            <p>Sedang menyiapkan jawaban... ✨</p>
+          </div>
+        )}
+      </div>
+
+      <form className="chatbot-form" onSubmit={kirimPesan}>
+        <textarea
+          value={pesan}
+          onChange={(e) => setPesan(e.target.value)}
+          placeholder="Contoh: Mengapa negatif dikali negatif hasilnya positif?"
+          rows="2"
+          disabled={memuat}
+        />
+        <button type="submit" disabled={memuat || !pesan.trim()}>
+          {memuat ? "Menjawab..." : "Kirim Pertanyaan ➤"}
+        </button>
+      </form>
+
+      <p className="chatbot-note">
+        Teman MathFun memberikan jawaban berdasarkan materi operasi bilangan bulat yang tersedia di dalam aplikasi.
+      </p>
+    </section>
+  );
+}
+
 export default function App() {
   const [halaman, setHalaman] = useState("Beranda");
 
-  // ==================================
-  // PENGATURAN BACKSOUND
-  // ==================================
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [musicError, setMusicError] = useState("");
@@ -129,19 +402,13 @@ export default function App() {
 
     try {
       setMusicError("");
-
       audio.volume = volume;
-
-      // Putar musik langsung dari klik pengguna.
       await audio.play();
-
       setIsPlaying(true);
     } catch (error) {
       console.error("Musik gagal diputar:", error);
       setIsPlaying(false);
-      setMusicError(
-        "Musik gagal diputar. Periksa file public/backsound.mp3 dan suara perangkat."
-      );
+      setMusicError("Musik gagal diputar. Periksa file public/backsound.mp3 dan suara perangkat.");
     }
   }
 
@@ -171,7 +438,8 @@ export default function App() {
     "Garis Bilangan",
     "Latihan",
     "Posttest",
-    "Evaluasi"
+    "Evaluasi",
+    "Ayo Tanyakan!"
   ];
 
   function hitung() {
@@ -192,8 +460,6 @@ export default function App() {
 
   return (
     <div className="app-container">
-
-      {/* AUDIO BACKSOUND */}
       <audio
         ref={audioRef}
         src="/backsound.mp3"
@@ -206,19 +472,12 @@ export default function App() {
         onPause={() => setIsPlaying(false)}
         onError={() => {
           setIsPlaying(false);
-          setMusicError(
-            "File backsound.mp3 tidak ditemukan atau tidak dapat dibaca."
-          );
+          setMusicError("File backsound.mp3 tidak ditemukan atau tidak dapat dibaca.");
         }}
       />
 
-      {/* TOMBOL DAN PENGATURAN MUSIK */}
       <div className="music-control">
-        <button
-          type="button"
-          className="music-button"
-          onClick={toggleMusic}
-        >
+        <button type="button" className="music-button" onClick={toggleMusic}>
           {isPlaying ? "⏸ Jeda Musik" : "▶ Putar Musik"}
         </button>
 
@@ -253,7 +512,6 @@ export default function App() {
           align-items: flex-end;
           gap: 9px;
         }
-
         .music-button {
           border: none;
           border-radius: 30px;
@@ -266,12 +524,10 @@ export default function App() {
           box-shadow: 0 4px 12px rgba(0,0,0,.2);
           transition: .2s;
         }
-
         .music-button:hover {
           background: #D45060;
           transform: translateY(-2px);
         }
-
         .volume-control {
           display: flex;
           align-items: center;
@@ -281,13 +537,11 @@ export default function App() {
           border-radius: 20px;
           box-shadow: 0 2px 8px rgba(0,0,0,.12);
         }
-
         .volume-control input {
           width: 95px;
           accent-color: #800020;
           cursor: pointer;
         }
-
         .music-error {
           background: white;
           color: #800020;
@@ -297,12 +551,10 @@ export default function App() {
           font-size: 12px;
           box-shadow: 0 2px 8px rgba(0,0,0,.15);
         }
-
         .mathfun-home {
           background: #FFF9F2;
           overflow: hidden;
         }
-
         .mathfun-hero {
           max-width: 1450px;
           min-height: 440px;
@@ -315,12 +567,10 @@ export default function App() {
           position: relative;
           background: #FFF9F2;
         }
-
         .mathfun-copy {
           position: relative;
           z-index: 3;
         }
-
         .mathfun-label {
           display: inline-block;
           background: #F3E6D5;
@@ -330,7 +580,6 @@ export default function App() {
           font-weight: bold;
           margin-bottom: 20px;
         }
-
         .mathfun-copy h2 {
           font-size: clamp(36px, 5vw, 64px);
           line-height: 1.1;
@@ -338,11 +587,7 @@ export default function App() {
           margin: 0 0 20px;
           font-weight: 800;
         }
-
-        .mathfun-copy h2 span {
-          color: #D45060;
-        }
-
+        .mathfun-copy h2 span { color: #D45060; }
         .mathfun-copy p {
           max-width: 470px;
           color: #542C32;
@@ -350,7 +595,6 @@ export default function App() {
           line-height: 1.7;
           margin-bottom: 25px;
         }
-
         .mathfun-start {
           border: none;
           border-radius: 35px;
@@ -362,12 +606,10 @@ export default function App() {
           cursor: pointer;
           transition: .3s;
         }
-
         .mathfun-start:hover {
           background: #800020;
           transform: translateY(-3px);
         }
-
         .mathfun-picture {
           min-height: 350px;
           position: relative;
@@ -377,7 +619,6 @@ export default function App() {
           background: radial-gradient(ellipse, #F3E6D5 0%, #FFF9F2 72%);
           border-radius: 50%;
         }
-
         .mathfun-picture::before {
           content: "";
           position: absolute;
@@ -387,7 +628,6 @@ export default function App() {
           border-radius: 50%;
           z-index: 0;
         }
-
         .student-image {
           display: block;
           position: relative;
@@ -398,12 +638,10 @@ export default function App() {
           object-fit: contain;
           animation: studentImageFloat 3s ease-in-out infinite;
         }
-
         @keyframes studentImageFloat {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }
         }
-
         .mathfun-doodle {
           position: absolute;
           z-index: 3;
@@ -412,12 +650,10 @@ export default function App() {
           font-weight: bold;
           animation: mathfunDoodle 3s ease-in-out infinite;
         }
-
         .doodle-one { top: 12px; left: 8%; }
         .doodle-two { top: 45px; right: 7%; animation-delay: .5s; }
         .doodle-three { bottom: 35px; left: 12%; animation-delay: 1s; }
         .doodle-four { bottom: 45px; right: 12%; animation-delay: 1.5s; }
-
         .mathfun-wave {
           position: absolute;
           bottom: 0;
@@ -425,13 +661,8 @@ export default function App() {
           width: 100%;
           height: 48px;
           background: #800020;
-          clip-path: polygon(
-            0 55%, 12% 25%, 25% 75%, 40% 30%,
-            55% 70%, 70% 25%, 85% 65%,
-            100% 15%, 100% 100%, 0 100%
-          );
+          clip-path: polygon(0 55%, 12% 25%, 25% 75%, 40% 30%, 55% 70%, 70% 25%, 85% 65%, 100% 15%, 100% 100%, 0 100%);
         }
-
         .mathfun-cards {
           max-width: 1150px;
           margin: 35px auto;
@@ -440,7 +671,6 @@ export default function App() {
           grid-template-columns: repeat(3, 1fr);
           gap: 22px;
         }
-
         .mathfun-card {
           background: white;
           border: 2px solid #F3E6D5;
@@ -450,26 +680,19 @@ export default function App() {
           box-shadow: 0 5px 15px rgba(128, 0, 32, .07);
           transition: .3s;
         }
-
         .mathfun-card:hover {
           transform: translateY(-6px);
           border-color: #D45060;
         }
-
-        .mathfun-card-icon {
-          font-size: 42px;
-        }
-
+        .mathfun-card-icon { font-size: 42px; }
         .mathfun-card h3 {
           color: #800020;
           margin: 12px 0;
         }
-
         .mathfun-card p {
           color: #725C5C;
           margin-bottom: 15px;
         }
-
         .mathfun-card button {
           background: #D45060;
           color: white;
@@ -479,38 +702,23 @@ export default function App() {
           cursor: pointer;
           font-weight: bold;
         }
-
-        .mathfun-card button:hover {
-          background: #800020;
-        }
-
+        .mathfun-card button:hover { background: #800020; }
         @keyframes mathfunDoodle {
           0%, 100% { transform: translateY(0) rotate(-10deg); }
           50% { transform: translateY(-13px) rotate(10deg); }
         }
-
         @media (max-width: 800px) {
           .mathfun-hero {
             grid-template-columns: 1fr;
             text-align: center;
           }
-
           .mathfun-copy p {
             margin-left: auto;
             margin-right: auto;
           }
-
-          .mathfun-picture {
-            min-height: 300px;
-          }
-
-          .student-image {
-            height: 290px;
-          }
-
-          .mathfun-cards {
-            grid-template-columns: 1fr;
-          }
+          .mathfun-picture { min-height: 300px; }
+          .student-image { height: 290px; }
+          .mathfun-cards { grid-template-columns: 1fr; }
         }
       `}</style>
 
@@ -544,17 +752,13 @@ export default function App() {
                 <span className="mathfun-label">
                   Belajar Matematika Jadi Lebih Seru! ⭐
                 </span>
-
                 <h2>
                   Yuk, Belajar <br />
                   <span>Bilangan Bulat!</span>
                 </h2>
-
                 <p>
-                  Ayo jelajahi dunia matematika bersama kami
-                  dengan cara yang mudah dan menyenangkan!
+                  Ayo jelajahi dunia matematika bersama kami dengan cara yang mudah dan menyenangkan!
                 </p>
-
                 <button
                   className="mathfun-start"
                   onClick={() => setHalaman("Pretest")}
@@ -568,14 +772,12 @@ export default function App() {
                 <span className="mathfun-doodle doodle-two">−</span>
                 <span className="mathfun-doodle doodle-three">×</span>
                 <span className="mathfun-doodle doodle-four">÷</span>
-
                 <img
                   src="/mathfun-siswa.png"
                   alt="Dua siswa SMP berseragam putih biru"
                   className="student-image"
                 />
               </div>
-
               <div className="mathfun-wave"></div>
             </section>
 
@@ -600,16 +802,21 @@ export default function App() {
                 <p>Uji kemampuan matematika kamu.</p>
                 <button onClick={() => setHalaman("Latihan")}>Mulai</button>
               </div>
+
+              <div className="mathfun-card">
+                <div className="mathfun-card-icon">🤖</div>
+                <h3>Ayo Tanyakan!</h3>
+                <p>Tanyakan hal yang belum kamu pahami kepada Teman MathFun.</p>
+                <button onClick={() => setHalaman("Ayo Tanyakan!")}>
+                  Mulai Bertanya
+                </button>
+              </div>
             </section>
           </div>
         )}
 
         {halaman === "Pretest" && (
-          <Kuis
-            judul="Pretest Bilangan Bulat"
-            daftarSoal={soalPretest}
-            onSelesai={setNilaiPretest}
-          />
+          <Kuis judul="Pretest Bilangan Bulat" daftarSoal={soalPretest} onSelesai={setNilaiPretest} />
         )}
 
         {halaman === "Materi" && (
@@ -672,7 +879,6 @@ export default function App() {
                   setHasil(null);
                 }}
               />
-
               <select
                 value={operasi}
                 onChange={(e) => {
@@ -685,7 +891,6 @@ export default function App() {
                 <option>×</option>
                 <option>÷</option>
               </select>
-
               <input
                 type="number"
                 value={angka2}
@@ -694,7 +899,6 @@ export default function App() {
                   setHasil(null);
                 }}
               />
-
               <button className="primary-btn" onClick={hitung}>Hitung</button>
             </div>
 
@@ -711,7 +915,6 @@ export default function App() {
 
             <div className="number-line">
               <div className="line-track"></div>
-
               {Array.from({ length: 21 }, (_, i) => i - 10).map((n) => (
                 <div className="line-point" key={n}>
                   <span className="line-tick"></span>
@@ -721,7 +924,6 @@ export default function App() {
                 </div>
               ))}
             </div>
-
             <p className="line-note">
               Ke kiri dari 0 adalah bilangan negatif. Ke kanan dari 0 adalah bilangan positif.
             </p>
@@ -729,19 +931,11 @@ export default function App() {
         )}
 
         {halaman === "Latihan" && (
-          <Kuis
-            judul="Latihan Soal Bilangan Bulat"
-            daftarSoal={soalLatihan}
-            onSelesai={setNilaiLatihan}
-          />
+          <Kuis judul="Latihan Soal Bilangan Bulat" daftarSoal={soalLatihan} onSelesai={setNilaiLatihan} />
         )}
 
         {halaman === "Posttest" && (
-          <Kuis
-            judul="Posttest Bilangan Bulat"
-            daftarSoal={soalPosttest}
-            onSelesai={setNilaiPosttest}
-          />
+          <Kuis judul="Posttest Bilangan Bulat" daftarSoal={soalPosttest} onSelesai={setNilaiPosttest} />
         )}
 
         {halaman === "Evaluasi" && (
@@ -755,13 +949,11 @@ export default function App() {
                 <p>Nilai Pretest</p>
                 <strong>{nilaiPretest === null ? "Belum dikerjakan" : nilaiPretest}</strong>
               </div>
-
               <div className="evaluation-item">
                 <span>✏️</span>
                 <p>Nilai Latihan</p>
                 <strong>{nilaiLatihan === null ? "Belum dikerjakan" : nilaiLatihan}</strong>
               </div>
-
               <div className="evaluation-item">
                 <span>🏆</span>
                 <p>Nilai Posttest</p>
@@ -797,6 +989,8 @@ export default function App() {
             </div>
           </section>
         )}
+
+        {halaman === "Ayo Tanyakan!" && <ChatbotMathFun />}
       </main>
 
       <footer className="main-footer">
